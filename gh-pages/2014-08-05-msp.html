@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Multi-stage Programming</title>
+<!-- 2014-08-05 Tue 15:30 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="梦里醉逍遥" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Multi-stage Programming</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">导言</a></li>
+<li><a href="#sec-2">Multi-stage programming</a>
+<ul>
+<li><a href="#sec-2-1">简介</a></li>
+<li><a href="#sec-2-2">再探power函数</a></li>
+<li><a href="#sec-2-3">其他应用</a>
+<ul>
+<li><a href="#sec-2-3-1">Staged Interpreter</a></li>
+<li><a href="#sec-2-3-2">其他</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+本文是<a href="http://www.cs.rice.edu/~taha/publications/journal/dspg04a.pdf">A Gentle Introduction to Multi-stage Programming</a> (2004) 一文的阅读笔记。
+</p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">导言</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+我们先从一个简单（且经典）的例子说起。我们要写一个函数来计算x的n次方，下面是用OCaml代码实现的一个递归版本 <sup><a id="fnr.1" name="fnr.1" class="footref" href="#fn.1">1</a></sup>：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span style="color: #d33682; font-weight: bold;">let</span> <span style="color: #d33682; font-weight: bold;">rec</span> <span style="color: #268bd2;">power</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">(</span><span style="color: #268bd2;">n</span><span style="color: #93a1a1;">,</span><span style="color: #268bd2;"> x</span><span style="color: #93a1a1;">)</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">=</span>
+   <span style="color: #859900; font-weight: bold;">match</span> n <span style="color: #859900; font-weight: bold;">with</span>
+     0 <span style="color: #93a1a1;">-&gt;</span> 1 <span style="color: #93a1a1;">|</span> n <span style="color: #93a1a1;">-&gt;</span> x <span style="color: #93a1a1;">*</span> <span style="color: #93a1a1;">(</span>power <span style="color: #93a1a1;">(</span>n<span style="color: #93a1a1;">-</span>1<span style="color: #93a1a1;">,</span> x<span style="color: #93a1a1;">));;</span>
+</pre>
+</div>
+
+<p>
+这是一个很 general 的函数，可以计算 <code>x</code> 的任意非负次幂。但是 good for everything, 往往还意味着 good for nothing. 举例来说，如果我们在实际程序中经常需要的是计算 <code>x</code> 的平方，经常使用这个 general 的 <code>power</code> 函数就有些浪费。
+</p>
+
+<p>
+如果我们想要一个特化的计算平方的函数，便有下面一种（“掩耳盗铃”）的方法：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span style="color: #d33682; font-weight: bold;">let</span> <span style="color: #268bd2;">power2</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">=</span> <span style="color: #859900; font-weight: bold;">fun</span><span style="color: #268bd2;"> x </span><span style="color: #93a1a1;">-&gt;</span> power <span style="color: #93a1a1;">(</span>2<span style="color: #93a1a1;">,</span>x<span style="color: #93a1a1;">);;</span>
+</pre>
+</div>
+
+<p>
+除了“看起来”像一个计算平方的函数以外，这种方式还可以帮助程序员在未来的每次调用过程中少写3个字符。但显然这种方式运行效率上并没有任何的优化——尽管我们十分清楚我们计算的是平方，我们还是要每次为 matching 和递归调用复出代价。
+</p>
+
+<p>
+当然我们可以直接编写譬如 <code>x * x</code> 这样的代码，但如果我们还要同时经常调用3次幂、4次幂、5次幂呢？如果我们需要经常调用的是100次幂呢？或者如果我们只有在运行时才知道经常调用几次幂，或者这个频率会在运行时发生改变呢？
+</p>
+
+<p>
+所以事实上我们是有这样一种需求：我们希望能够以一种 general 的形式编写代码（如 <code>power</code> 函数），但却能够在运行时具有与特化代码类似的效率（如 <code>x * x</code> ）。
+</p>
+
+<p>
+有没有这样一种方法呢？有的。那就是我们这篇文章要谈的 multi-stage programming (MSP).
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Multi-stage programming</h2>
+<div class="outline-text-2" id="text-2">
+</div><div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">简介</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+MSP 是一种可以用来编写 general 的代码却不需要在运行时为这种 generality 付出代价的范式。支持MSP的语言允许用户通过简单的代码，在运行时生成和执行新的代码；同时，MSP 语言的类型系统还可以静态地检查将要动态生成代码，从而不需要在代码生成之后再进行额外的类型检查。
+</p>
+
+<p>
+MSP通常包含三种结构，以<a href="http://www.cs.rice.edu/~taha/publications/conference/gpce03b.pdf"> MetaOCaml </a>为例，它们被称作 Brackets, Escape, 和 Run <sup><a id="fnr.2" name="fnr.2" class="footref" href="#fn.2">2</a></sup>.
+</p>
+
+<p>
+<b>Brackets</b> 用来延迟一个表达式的执行，在 MetaOCaml 中以 <code>.&lt;</code> 和 <code>&gt;.</code> 两个符号括起来表示。下面的例子表明了brackets的效果：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span style="color: #93a1a1;">#</span> <span style="color: #d33682; font-weight: bold;">let</span> <span style="color: #268bd2;">a </span><span style="color: #93a1a1;">=</span> 1<span style="color: #93a1a1;">+</span>2<span style="color: #93a1a1;">;;</span>
+<span style="color: #d33682; font-weight: bold;">val</span> <span style="color: #268bd2;">a</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">:</span> <span style="color: #b58900;">int</span> <span style="color: #93a1a1;">=</span> 3
+<span style="color: #93a1a1;">#</span> <span style="color: #d33682; font-weight: bold;">let</span> <span style="color: #268bd2;">a </span><span style="color: #93a1a1;">=</span> .<span style="color: #93a1a1;">&lt;</span>1<span style="color: #93a1a1;">+</span>2<span style="color: #93a1a1;">&gt;.;;</span>
+<span style="color: #d33682; font-weight: bold;">val</span> <span style="color: #268bd2;">a</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">:</span> <span style="color: #b58900;">int code</span> <span style="color: #93a1a1;">=</span> .<span style="color: #93a1a1;">&lt;</span>1<span style="color: #93a1a1;">+</span>2<span style="color: #93a1a1;">&gt;.</span>
+</pre>
+</div>
+
+<p>
+<b>Escape</b> 则恰恰相反，它会计算一个被brackets的表达式的值。在 MetaOCaml 中用 <code>.~</code> 符号表示。常见的用法是在 brackets 中使用 escape 来拼接代码，如下面的例子所示：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span style="color: #93a1a1;">#</span> <span style="color: #d33682; font-weight: bold;">let</span> <span style="color: #268bd2;">b </span><span style="color: #93a1a1;">=</span> .<span style="color: #93a1a1;">&lt;.~</span>a <span style="color: #93a1a1;">*</span> .<span style="color: #93a1a1;">~</span>a <span style="color: #93a1a1;">&gt;.</span> <span style="color: #93a1a1;">;;</span>
+<span style="color: #d33682; font-weight: bold;">val</span> <span style="color: #268bd2;">b</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">:</span> <span style="color: #b58900;">int code</span> <span style="color: #93a1a1;">=</span> .<span style="color: #93a1a1;">&lt;(</span>1 <span style="color: #93a1a1;">+</span> 2<span style="color: #93a1a1;">)</span> <span style="color: #93a1a1;">*</span> <span style="color: #93a1a1;">(</span>1 <span style="color: #93a1a1;">+</span> 2<span style="color: #93a1a1;">)&gt;.</span>
+</pre>
+</div>
+
+<p>
+如果不使用escape我们只能得到.&lt;a * a&gt;.
+</p>
+
+<p>
+Brackets输出的结果是代码，而 <b>run</b> 用来在当前语言、当前环境下实际编译和运行这段代码。Run 在 MetaOCaml 中用 <code>.!</code> 符号来表示。代码示例如下：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span style="color: #93a1a1;">#</span> <span style="color: #d33682; font-weight: bold;">let</span> <span style="color: #268bd2;">c </span><span style="color: #93a1a1;">=</span> .<span style="color: #93a1a1;">!</span> b<span style="color: #93a1a1;">;;</span>
+<span style="color: #d33682; font-weight: bold;">val</span> <span style="color: #268bd2;">c</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">:</span> <span style="color: #b58900;">int</span> <span style="color: #93a1a1;">=</span> 9
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">再探power函数</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+回到文章开头的问题中：我们希望以general的方式编写 <code>power</code> 函数的代码，同时在运行时具有类似特化代码的运行效率。我们可以用 MSP 重新编写 <code>power</code> 函数，使它在运行时根据参数 <code>n</code> 生成类似 <code>x * x</code> 形式的的代码。新的 <code>power</code> 函数如下所示：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span style="color: #d33682; font-weight: bold;">let</span> <span style="color: #d33682; font-weight: bold;">rec</span> <span style="color: #268bd2;">power</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">(</span><span style="color: #268bd2;">n</span><span style="color: #93a1a1;">,</span><span style="color: #268bd2;"> x</span><span style="color: #93a1a1;">)</span><span style="color: #268bd2;"> </span><span style="color: #93a1a1;">=</span>
+   <span style="color: #859900; font-weight: bold;">match</span> n <span style="color: #859900; font-weight: bold;">with</span>
+     0 <span style="color: #93a1a1;">-&gt;</span> .<span style="color: #93a1a1;">&lt;</span>1<span style="color: #93a1a1;">&gt;.</span> <span style="color: #93a1a1;">|</span> n <span style="color: #93a1a1;">-&gt;</span> .<span style="color: #93a1a1;">&lt;.~</span>x <span style="color: #93a1a1;">*</span> .<span style="color: #93a1a1;">~(</span>power <span style="color: #93a1a1;">(</span>n<span style="color: #93a1a1;">-</span>1<span style="color: #93a1a1;">,</span> x<span style="color: #93a1a1;">))&gt;.;;</span>
+</pre>
+</div>
+
+<p>
+对于经常使用的 <code>power2</code> 函数，以如下方式声明：
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-ocaml"><span style="color: #d33682; font-weight: bold;">let</span> <span style="color: #268bd2;">power2 </span><span style="color: #93a1a1;">=</span> .<span style="color: #93a1a1;">!</span> .<span style="color: #93a1a1;">&lt;</span><span style="color: #859900; font-weight: bold;">fun</span><span style="color: #268bd2;"> x </span><span style="color: #93a1a1;">-&gt;</span> .<span style="color: #93a1a1;">~(</span>power <span style="color: #93a1a1;">(</span>2<span style="color: #93a1a1;">,</span>.<span style="color: #93a1a1;">&lt;</span>x<span style="color: #93a1a1;">&gt;.))&gt;.;;</span>
+</pre>
+</div>
+
+<p>
+在 <code>power2</code> 函数中我们得到的实际上是 <code>.! .&lt;1 * x * x&gt;.</code>, 所以其最终运行效果和 <code>1 * x * x</code> 是一样的。
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">其他应用</h3>
+<div class="outline-text-3" id="text-2-3">
+</div><div id="outline-container-sec-2-3-1" class="outline-4">
+<h4 id="sec-2-3-1">Staged Interpreter</h4>
+<div class="outline-text-4" id="text-2-3-1">
+<p>
+通过将要解释的代码解释成原生代码并编译取得和原生代码一样的效率（类似JIT？）。
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3-2" class="outline-4">
+<h4 id="sec-2-3-2">其他</h4>
+<div class="outline-text-4" id="text-2-3-2">
+<p>
+（待补充）
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" name="fn.1" class="footnum" href="#fnr.1">1</a></sup> <p class="footpara">
+本文中的所有代码都来自<a href="http://www.cs.rice.edu/~taha/publications/journal/dspg04a.pdf"> A Gentle Introduction to Multi-stage Programming</a> 原文。
+</p></div>
+
+<div class="footdef"><sup><a id="fn.2" name="fn.2" class="footnum" href="#fnr.2">2</a></sup> <p class="footpara">
+这些名词在不同的程序语言或文章中可能会不同，譬如这里的 brackets 在 <a href="http://theory.stanford.edu/~aiken/publications/papers/pldi14b.pdf">First-class Runtime Generation of High-performance Types using Exotypes</a> 中被称作 quotation.
+</p></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<p class="date">Date: 2014-08-05</p>
+<p class="author">Author: 梦里醉逍遥</p>
+<p class="date">Created: 2014-08-05 Tue 15:30</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.3.1 (<a href="http://orgmode.org">Org</a> mode 8.2.7b)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

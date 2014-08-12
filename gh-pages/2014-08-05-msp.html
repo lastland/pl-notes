@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Multi-stage Programming</title>
-<!-- 2014-08-05 Tue 15:30 -->
+<!-- 2014-08-12 Tue 11:30 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="梦里醉逍遥" />
@@ -163,8 +163,9 @@ for the JavaScript code in this tag.
 </p>
 
 <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">导言</h2>
+<h2 id="sec-1"><a id="ID-280079CE-A511-47F8-AA4B-D3B4A7F6418B" name="ID-280079CE-A511-47F8-AA4B-D3B4A7F6418B"></a>导言</h2>
 <div class="outline-text-2" id="text-1">
+
 <p>
 我们先从一个简单（且经典）的例子说起。我们要写一个函数来计算x的n次方，下面是用OCaml代码实现的一个递归版本 <sup><a id="fnr.1" name="fnr.1" class="footref" href="#fn.1">1</a></sup>：
 </p>
@@ -210,11 +211,13 @@ for the JavaScript code in this tag.
 </div>
 
 <div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">Multi-stage programming</h2>
+<h2 id="sec-2"><a id="ID-ED808798-E8A3-4631-839A-0187C0E16603" name="ID-ED808798-E8A3-4631-839A-0187C0E16603"></a>Multi-stage programming</h2>
 <div class="outline-text-2" id="text-2">
-</div><div id="outline-container-sec-2-1" class="outline-3">
-<h3 id="sec-2-1">简介</h3>
+</div>
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1"><a id="ID-ED69AF10-2212-4813-A900-E37CB84A0A4F" name="ID-ED69AF10-2212-4813-A900-E37CB84A0A4F"></a>简介</h3>
 <div class="outline-text-3" id="text-2-1">
+
 <p>
 MSP 是一种可以用来编写 general 的代码却不需要在运行时为这种 generality 付出代价的范式。支持MSP的语言允许用户通过简单的代码，在运行时生成和执行新的代码；同时，MSP 语言的类型系统还可以静态地检查将要动态生成代码，从而不需要在代码生成之后再进行额外的类型检查。
 </p>
@@ -265,8 +268,9 @@ Brackets输出的结果是代码，而 <b>run</b> 用来在当前语言、当前
 </div>
 
 <div id="outline-container-sec-2-2" class="outline-3">
-<h3 id="sec-2-2">再探power函数</h3>
+<h3 id="sec-2-2"><a id="ID-00914F4A-9620-423D-8D79-8D209F516669" name="ID-00914F4A-9620-423D-8D79-8D209F516669"></a>再探power函数</h3>
 <div class="outline-text-3" id="text-2-2">
+
 <p>
 回到文章开头的问题中：我们希望以general的方式编写 <code>power</code> 函数的代码，同时在运行时具有类似特化代码的运行效率。我们可以用 MSP 重新编写 <code>power</code> 函数，使它在运行时根据参数 <code>n</code> 生成类似 <code>x * x</code> 形式的的代码。新的 <code>power</code> 函数如下所示：
 </p>
@@ -296,10 +300,11 @@ Brackets输出的结果是代码，而 <b>run</b> 用来在当前语言、当前
 </div>
 
 <div id="outline-container-sec-2-3" class="outline-3">
-<h3 id="sec-2-3">其他应用</h3>
+<h3 id="sec-2-3"><a id="ID-23C53132-F8D9-4A2D-92B5-84B97A40FB35" name="ID-23C53132-F8D9-4A2D-92B5-84B97A40FB35"></a>其他应用</h3>
 <div class="outline-text-3" id="text-2-3">
-</div><div id="outline-container-sec-2-3-1" class="outline-4">
-<h4 id="sec-2-3-1">Staged Interpreter</h4>
+</div>
+<div id="outline-container-sec-2-3-1" class="outline-4">
+<h4 id="sec-2-3-1"><a id="ID-6879D2FB-83C1-4341-92F2-E1F2BE841CFF" name="ID-6879D2FB-83C1-4341-92F2-E1F2BE841CFF"></a>Staged Interpreter</h4>
 <div class="outline-text-4" id="text-2-3-1">
 <p>
 通过将要解释的代码解释成原生代码并编译取得和原生代码一样的效率（类似JIT？）。
@@ -308,7 +313,7 @@ Brackets输出的结果是代码，而 <b>run</b> 用来在当前语言、当前
 </div>
 
 <div id="outline-container-sec-2-3-2" class="outline-4">
-<h4 id="sec-2-3-2">其他</h4>
+<h4 id="sec-2-3-2"><a id="ID-062CEB62-5004-412C-B985-DE4FF841A25E" name="ID-062CEB62-5004-412C-B985-DE4FF841A25E"></a>其他</h4>
 <div class="outline-text-4" id="text-2-3-2">
 <p>
 （待补充）
@@ -335,7 +340,7 @@ Brackets输出的结果是代码，而 <b>run</b> 用来在当前语言、当前
 <div id="postamble" class="status">
 <p class="date">Date: 2014-08-05</p>
 <p class="author">Author: 梦里醉逍遥</p>
-<p class="date">Created: 2014-08-05 Tue 15:30</p>
+<p class="date">Created: 2014-08-12 Tue 11:30</p>
 <p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.3.1 (<a href="http://orgmode.org">Org</a> mode 8.2.7b)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>

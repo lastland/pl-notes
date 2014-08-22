@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Java HotSpot Virtual Machine 的垃圾回收机制</title>
+<!-- 2014-08-22 Fri 12:38 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="梦里醉逍遥" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<link rel="alternate" type="application/rss+xml"
+                href="http://lastland.github.io/pl-notes/index.xml"
+                title="RSS feed for mydomain.org">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Java HotSpot Virtual Machine 的垃圾回收机制</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">背景知识</a>
+<ul>
+<li><a href="#sec-1-1">显式内存管理的问题</a></li>
+<li><a href="#sec-1-2">垃圾回收基本概念</a></li>
+<li><a href="#sec-1-3">对 GC 的需求</a></li>
+<li><a href="#sec-1-4">GC 设计中的抉择</a></li>
+<li><a href="#sec-1-5">评估 GC 的性能指标</a></li>
+<li><a href="#sec-1-6">分代垃圾收集</a></li>
+</ul>
+</li>
+<li><a href="#sec-2">J2SE 5.0 HotSpot JVM 上的 GC</a>
+<ul>
+<li><a href="#sec-2-1">HotSpot 上的分代</a></li>
+<li><a href="#sec-2-2">快速内存分配</a></li>
+<li><a href="#sec-2-3">各种版本的垃圾回收器</a>
+<ul>
+<li><a href="#sec-2-3-1">串行回收器</a></li>
+<li><a href="#sec-2-3-2">并行回收器</a></li>
+<li><a href="#sec-2-3-3">并行压缩回收器</a></li>
+<li><a href="#sec-2-3-4">同步标记-清扫（CMS）回收器</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#sec-3">其他</a></li>
+</ul>
+</div>
+</div>
+<p>
+本文是<a href="http://www.oracle.com/technetwork/java/javase/memorymanagement-whitepaper-150215.pdf">Memory Management in the Java HotSpotTM Virtual Machine</a> (2006) 一文的阅读笔记。
+</p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">背景知识</h2>
+<div class="outline-text-2" id="text-1">
+</div><div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1">显式内存管理的问题</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+显式内存管理指由程序员来管理内存。然而内存管理这一任务本身非常复杂，程序员经常在这上面犯错误导致错误的程序行为乃至崩溃。这方面常见的错误有两种：一种叫悬空引用（dangling reference），即程序员把一个还可能用到的对象给回收了，然后又把这块空间分给了别的对象，那么尝试访问那个被错误回收的对象就会得到错误的值；另一种叫空间泄漏（space leak），与前者正好相反，是有一个对象已经不需要了，但由于某些原因程序员没有把它的空间给回收掉，从而造成空间浪费，严重的话还会导致内存被这样无意义地消耗光。
+</p>
+
+<p>
+解决这两个问题的方法就是使用一个专门的程序来分析和收集内存中的垃圾，即垃圾回收器（garbage collector）。
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2">垃圾回收基本概念</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+垃圾回收器（以下简称 GC）的职责如下：
+</p>
+
+<ul class="org-ul">
+<li>分配内存，
+</li>
+<li>确保所有被引用到的对象都呆在内存里，
+</li>
+<li>把已经不被引用的对象从内存中移除出去以恢复内存空间。
+</li>
+</ul>
+
+<p>
+其中被引用或者不被引用指的是在当前执行的代码中是否还有相关的可到达该对象的引用。
+</p>
+
+<p>
+GC 不能解决比如，你创建了一个对象，后来你再也不用它了但是你的程序一直保持着该对象的引用这种问题。
+</p>
+
+<p>
+具体的算法和执行垃圾回收的时间取决于 GC，使用它的程序员不需要知道相关的细节。
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-3" class="outline-3">
+<h3 id="sec-1-3">对 GC 的需求</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+GC 应当安全且全面。即不会释放掉还活着的数据，也不会执行几遍也回收不掉某块该被回收的垃圾。
+</p>
+
+<p>
+GC 应当是高效的。比如，不能暂停很长时间导致原本的应用程序在这段时间内都无法运行。
+</p>
+
+<p>
+GC 应当尽量避免内存碎片化。碎片化的后果就是，很多次回收以后有一个新对象请求内存，内存中明明有充足的空间但却偏偏没一块足够大的连续空间容得下它。
+</p>
+
+<p>
+GC 还必须是 scalable 的。无论分配内存还是收集垃圾，都不应该成为多线程应用或多核系统的性能瓶颈。
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-4" class="outline-3">
+<h3 id="sec-1-4">GC 设计中的抉择</h3>
+<div class="outline-text-3" id="text-1-4">
+<ul class="org-ul">
+<li>串行还是并行。串行的 GC 不能受益于多 CPU，而并行的 GC 往往会更加复杂且更容易出现碎片。
+</li>
+<li>同步还是暂停。暂停式（stop-the-word）的 GC 会在进行垃圾回收时完全停止原本应用程序的执行；同步式（concurrent）的 GC 中垃圾回收将和应用程序同时运行——不过通常来说只是在做大部分回收工作时，也就是说即使同步式的 GC 也可能会暂停应用程序的执行。暂停式的 GC 较为简单，因为暂停时整个堆里的数据不会再发生改变了，但是这个暂停的时间可能对某些应用程序来说是不能容忍的；同步式的 GC 暂停的时间比较短，但由于需要处理同时还可能被更新的数据，这些开销可能会导致总体上的性能比暂停式的要差一些，需要的堆的大小也可能更大一些。
+</li>
+<li>压缩，不压缩，还是拷贝。注意这里的压缩指的是 compact 而不是 compress ，即在垃圾收集后把所有幸存的对象挪到一起，以增加可以利用的连续空间的大小，这种方法可以使以后分配内存更简单、快速；不压缩的话垃圾收集可以完成得更快一些，但是可能会导致碎片化，导致以后分配内存比较麻烦；还有一种方法是把所有幸存者拷贝到另一块内存区域，这样现在的区域就空掉了，以后分配内存就非常简单了，当然坏处就是拷贝要花时间，而且需要额外的内存空间。
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1-5" class="outline-3">
+<h3 id="sec-1-5">评估 GC 的性能指标</h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+评估一个 GC 的时候需要考虑以下的性能指标：
+</p>
+
+<ul class="org-ul">
+<li>吞吐量（throughput）。在较长的一段时间内，不是花在 GC 上的时间占总时间的百分比。
+</li>
+<li>GC 开销（garbage collection overhead）。100% 减去吞吐量。
+</li>
+<li>暂停时间（pause time）。由于 GC 而应用程序被停止执行的时间。
+</li>
+<li>收集频率（frequency of collection）。GC 相对于应用程序的执行发生的频率。
+</li>
+<li>占用空间（footprint）。比如堆的大小。
+</li>
+<li>迅速性（promptness）。从对象变成垃圾到对应空间被回收的时间。
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1-6" class="outline-3">
+<h3 id="sec-1-6">分代垃圾收集</h3>
+<div class="outline-text-3" id="text-1-6">
+<p>
+分代垃圾收集（generational collection）将内存分为几代（generation），每一代保存不同年龄的对象。比如，最常见的做法是分为两代：年轻代和年老代。
+</p>
+
+<p>
+将内存分代以后可以在不同的代上，根据这一代的特点，运用不同的垃圾回收算法。分代垃圾收集利用了一个叫弱分代假设（weak generational hypothesis）的观察，即对许多应用程序——包括用 Java 写的——来说：
+</p>
+
+<ul class="org-ul">
+<li>大部分分配的对象都活不久，
+</li>
+<li>很少有从年老的对象到年轻的对象的引用。
+</li>
+</ul>
+
+<p>
+因此通常年轻代上的垃圾回收算法的主要考量是速度，因为年轻代上需要经常进行垃圾回收；年轻代上的对象存活一定时间后会被提升甚至永久保存到年老代，年老代的大小增长较慢，因此不经常发生垃圾回收，通常在其上面采用的算法更重视空间上的高效。
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">J2SE 5.0 HotSpot JVM 上的 GC</h2>
+<div class="outline-text-2" id="text-2">
+</div><div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">HotSpot 上的分代</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+Java HotSpot VM 将内存分为三代：年轻代（young generation），年老代（old generation），和永生代（permanent generation）。大部分对象都出生于年轻代，熬过一定轮数残忍的垃圾回收之后被提升到年老代——不过也有些比较大的对象可以直接出生在年老代。永生代一般放的是比如描述类和方法的对象还有类和方法本身。
+</p>
+
+<p>
+年轻代又由伊甸园（Eden）和两个幸存者区域组成。大部分对象出生于伊甸园，而幸存者区域中则是至少熬过了一轮垃圾回收的对象——通过幸存者区域，那些年轻对象在被提升到年老代之前被赐予了更多次死掉的机会……在任何一个时间点，两个幸存者区域中只有一个是有东西的（另一个是空的）。
+</p>
+
+<p>
+当年轻代快满的时候仅在年轻代上运行垃圾回收的算法；而当年老代或者永生代快满的时候，会在所有代上（包括年轻代）执行垃圾回收算法。其中年轻代有其独自的垃圾回收算法，而年老代和永生代则使用一套相同的算法。通常年轻代上的算法先执行。不过有的时候可能年老代太满了没法接受从年轻代上提升过来的对象，这时候年轻代上的垃圾回收算法不再运行，而是在整个堆上跑年老代的算法——后面将会提到的CMS收集器除外。
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">快速内存分配</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+在接下来将要提到的算法中，通常都有较大的连续内存块可以分配，这种情况下的内存分配，利用 bump-the-pointer 技术，是非常快的。具体来说就是保存上一次分配掉的内存的尾部地址，需要分配新的空间时，检查空间是否足够，如果足够，更新指针再初始化那个对象就好了。
+</p>
+
+<p>
+对多线程应用来说，内存分配必须是线程安全的。如果用全局锁的话无疑内存分配会变成性能瓶颈，因此 HotSpot VM 使用了一种叫 Thread-Local Allocation Buffers (TLABs) 的技术，即把内存划分成几个 buffer，每个线程一个单独的用来分配内存的 buffer，然后每个线程在这个 buffer 上 bump-the-pointer 就好了。不过偶尔有些线程可能会用光自己的 buffer，这时候还是需要同步的。HotSpot VM 用了许多技术来确保使用 TLABs 造成的内存浪费很小——不过用了怎样的技术文章里没说。
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">各种版本的垃圾回收器</h3>
+<div class="outline-text-3" id="text-2-3">
+</div><div id="outline-container-sec-2-3-1" class="outline-4">
+<h4 id="sec-2-3-1">串行回收器</h4>
+<div class="outline-text-4" id="text-2-3-1">
+<p>
+串行回收器（serial collector）是暂停式的、串行的，在年轻代使用拷贝方法，在年老代 / 永生代使用压缩方法的垃圾回收器。
+</p>
+</div>
+
+<ul class="org-ul"><li>年轻代<br  /><div class="outline-text-5" id="text-2-3-1-1">
+<p>
+串行回收器中的年轻代垃圾回收过程如下面的图中所示。在垃圾回收中，伊甸园（Eden）中活下来的对象会被拷贝到图中标记为 <i>To</i> 的幸存者区域——太大放不进去的则被直接提升到年老代。标记为 <i>From</i> 的幸存者区域中还存活的对象中相对较年轻的也会被拷到另一个幸存者区域，而相对较老的则提升到年老代。在一轮垃圾回收之后，伊甸园和之前含有对象的幸存者区域就都变空了。
+</p>
+
+
+<div id="fig:serial-young" class="figure">
+<p><img src="./assets/hotspot-gc-figure-serial-young.png" alt="hotspot-gc-figure-serial-young.png" />
+</p>
+<p><span class="figure-number">Figure 1:</span> 串行回收器年轻代垃圾回收过程示意图</p>
+</div>
+</div>
+</li>
+
+<li>年老代 / 永生代<br  /><div class="outline-text-5" id="text-2-3-1-2">
+<p>
+年老代和永生代上使用mark-sweep-compact 算法。在 mark 阶段，回收器标记出活的对象；在 sweep 阶段，释放垃圾；在 compact 阶段，把所有活着的对象往这一代的开头区域挪，这样另一头就完全是空的，这样就可以 bump-the-pointer <sup><a id="fnr.1" name="fnr.1" class="footref" href="#fn.1">1</a></sup>。
+</p>
+</div>
+</li></ul>
+</div>
+
+<div id="outline-container-sec-2-3-2" class="outline-4">
+<h4 id="sec-2-3-2">并行回收器</h4>
+<div class="outline-text-4" id="text-2-3-2">
+<p>
+并行回收器（parallel collector）是暂停式的，在年轻代使用并行的拷贝方法，而在年老代 / 永生代依旧使用串行的压缩方法的垃圾回收器。
+</p>
+</div>
+
+<ul class="org-ul"><li>年轻代<br  /><div class="outline-text-5" id="text-2-3-2-1">
+<p>
+方法类似于串行回收器在年轻代的算法，不过改成了并行算法以利用多 CPU <sup><a id="fnr.2" name="fnr.2" class="footref" href="#fn.2">2</a></sup>。如下图所示。
+</p>
+
+
+<div class="figure">
+<p><img src="./assets/hotspot-gc-figure-parallel-young.png" alt="hotspot-gc-figure-parallel-young.png" />
+</p>
+<p><span class="figure-number">Figure 2:</span> 并行与串行垃圾回收方法的比较</p>
+</div>
+</div>
+</li>
+
+<li>年老代 / 永生代<br  /><div class="outline-text-5" id="text-2-3-2-2">
+<p>
+方法和在串行回收器中完全一样。
+</p>
+</div>
+</li></ul>
+</div>
+
+<div id="outline-container-sec-2-3-3" class="outline-4">
+<h4 id="sec-2-3-3">并行压缩回收器</h4>
+<div class="outline-text-4" id="text-2-3-3">
+<p>
+并行压缩回收器（parallel compacting collector）是暂停式的、并行的，在年轻代使用拷贝方法，在老年代 / 永生代使用压缩方法的垃圾回收器。
+</p>
+</div>
+
+<ul class="org-ul"><li>年轻代<br  /><div class="outline-text-5" id="text-2-3-3-1">
+<p>
+方法和并行回收器在年轻代的算法一样。
+</p>
+</div>
+</li>
+
+<li>年老代 / 永生代<br  /><div class="outline-text-5" id="text-2-3-3-2">
+<p>
+首先，每一代的内存区域都被分为逻辑上的固定大小的区域。然后垃圾回收分为三个阶段：
+</p>
+
+<p>
+在 marking 阶段，首先把初始可抵达的所有活的对象分配给所有垃圾回收的线程，这些线程并行地标记所有活着的对象。而后在 summary 阶段，GC 会一个一个区域（区域指我们之前划分的固定大小的区域）地扫描，评价把这个区域往开头方向移动所能获得的空间相对移动它们的代价是否值得，如果值得，将会在第三阶段移动它——在这一阶段 GC 仅仅标记每个区域在 compact 后的新位置。 <b>注意这个阶段其实是串行的。<sup><a id="fnr.3" name="fnr.3" class="footref" href="#fn.3">3</a></sup></b> 在 compaction 阶段，利用前一阶段产生的数据移动需要移动的对象，这一过程是可以并行的。
+</p>
+</div>
+</li></ul>
+</div>
+
+<div id="outline-container-sec-2-3-4" class="outline-4">
+<h4 id="sec-2-3-4">同步标记-清扫（CMS）回收器</h4>
+<div class="outline-text-4" id="text-2-3-4">
+<p>
+同步标记-清扫回收器（concurrent mark-sweep collector，以下简称CMS）是用来解决在年老代 / 永生代上进行垃圾回收可能发生的长暂停问题的，所以它又被称作低延时回收器（low-latency collector）。
+</p>
+</div>
+
+<ul class="org-ul"><li>年轻代<br  /><div class="outline-text-5" id="text-2-3-4-1">
+<p>
+方法和并行回收器在年轻代的算法一样。
+</p>
+</div>
+</li>
+
+<li>年老代 / 永生代<br  /><div class="outline-text-5" id="text-2-3-4-2">
+<p>
+CMS 在这两代上的垃圾回收算法在 <b>大多数</b> 时候是和应用程序同步运行的。
+</p>
+
+<p>
+CMS 每次回收开始时会先短暂地暂停应用程序，标记所有从应用程序中直接可达的对象，这一阶段被称作 initial mark。然后它会在下一个阶段，在应用程序运行的同时，标记出所有内存中存活的对象，这一阶段被称作 concurrent mark。不过显然在 concurrent mark 的过程中还会出现新的对象，它们在  GC 开始收集垃圾时可能也是存活的，必须也把它们找出来，所以在 concurrent mark 结束后，CMS 会再次暂停应用程序，重新访问所有在 concurrent mark 中被更改过的对象进行标记，这一过程被称作 remark。由于 remark 会暂停应用程序，效率比较重要，因此这一过程是并行的。在 remark 阶段之后，所有活的对象都被保证标记出来了，接下来就可以用一个与应用程序同步运行的程序把所有垃圾回收掉了。 过程如下图所示。
+</p>
+
+
+<div class="figure">
+<p><img src="./assets/hotspot-gc-figure-concurrent-young.png" alt="hotspot-gc-figure-concurrent-young.png" />
+</p>
+<p><span class="figure-number">Figure 3:</span> 串行与 CMS 方法比较</p>
+</div>
+
+<p>
+需要注意的是，与其他回收器不同，CMS 在这个阶段是不压缩（compact）数据的。因此在分配空间时需要维护一个 free list，然后在 free list 当中搜索足够大的空间，因此不能像其他回收器那样快速地分配空间。此外 CMS 往往需要比其他回收器更大的空间，一是因为在垃圾回收的过程中内存中的对象还会增加，此外在标记的时候 CMS 并不能保证所有垃圾都能被及时清除（它只保证所有存活的对象都被标记），也就是要等到下一次垃圾回收才行。此外由于 CMS 还要有 remark 的过程，其运行的总开销其实比其他回收器要大。
+</p>
+
+<p>
+由于 CMS 是不压缩的，可能会出现碎片化的问题，因此它会统计通常情况下对象的大小，预估需求，然后在适当时机分开或合并一些空闲内存块。
+</p>
+
+<p>
+CMS 的运行时机不是年老代或者永生代快满的时候，而是提前进行。具体时机则是根据一个基于时间的统计——看数据增长得多快。
+</p>
+</div>
+</li></ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">其他</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Java HotSpot VM 还自动选择回收器类型、堆大小的方法，用户只需要提供自己的需求，不需要亲自调整各种参数。
+</p>
+
+<p>
+此外文章提到了一些用于评估 GC 方法性能的工具，如有需求可以查看。
+</p>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" name="fn.1" class="footnum" href="#fnr.1">1</a></sup> <p class="footpara">
+当然年轻代中因为伊甸园完全是空的，同样可以 bump-the-pointer。
+</p></div>
+
+<div class="footdef"><sup><a id="fn.2" name="fn.2" class="footnum" href="#fnr.2">2</a></sup> <p class="footpara">
+应该是 TLABs 的方法？
+</p></div>
+
+<div class="footdef"><sup><a id="fn.3" name="fn.3" class="footnum" href="#fnr.3">3</a></sup> <p class="footpara">
+文中说使这一过程并行也是可能的，但并不像在 marking 或者 compaction 阶段中那么重要。
+</p></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<p class="date">Date: 2014-08-21</p>
+<p class="author">Author: 梦里醉逍遥</p>
+<p class="date">Created: 2014-08-22 Fri 12:38</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.3.1 (<a href="http://orgmode.org">Org</a> mode 8.2.7b)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

@@ -4,10 +4,6 @@
 本文是[[http://www.cs.rice.edu/~taha/publications/journal/dspg04a.pdf][A Gentle Introduction to Multi-stage Programming]] (2004) 一文的阅读笔记。
 
 * 导言
-  :PROPERTIES:
-  :ID:       280079CE-A511-47F8-AA4B-D3B4A7F6418B
-  :PUBDATE:  <2014-08-12 Tue 11:23>
-  :END:
 
 我们先从一个简单（且经典）的例子说起。我们要写一个函数来计算x的n次方，下面是用OCaml代码实现的一个递归版本 [fn:1]：
 
@@ -34,14 +30,7 @@ let power2 = fun x -> power (2,x);;
 有没有这样一种方法呢？有的。那就是我们这篇文章要谈的 multi-stage programming (MSP).
 
 * Multi-stage programming
-  :PROPERTIES:
-  :ID:       ED808798-E8A3-4631-839A-0187C0E16603
-  :PUBDATE:  <2014-08-12 Tue 11:23>
-  :END:
 ** 简介
-   :PROPERTIES:
-   :ID:       ED69AF10-2212-4813-A900-E37CB84A0A4F
-   :END:
 
 MSP 是一种可以用来编写 general 的代码却不需要在运行时为这种 generality 付出代价的范式。支持MSP的语言允许用户通过简单的代码，在运行时生成和执行新的代码；同时，MSP 语言的类型系统还可以静态地检查将要动态生成代码，从而不需要在代码生成之后再进行额外的类型检查。
 
@@ -63,7 +52,7 @@ val a : int code = .<1+2>.
 val b : int code = .<(1 + 2) * (1 + 2)>.
 #+END_SRC
 
-如果不使用escape我们只能得到.<a * a>.
+如果不使用escape我们只能得到 ~.<a * a>~.
 
 Brackets输出的结果是代码，而 *run* 用来在当前语言、当前环境下实际编译和运行这段代码。Run 在 MetaOCaml 中用 ~.!~ 符号来表示。代码示例如下：
 
@@ -73,9 +62,6 @@ val c : int = 9
 #+END_SRC
 
 ** 再探power函数
-   :PROPERTIES:
-   :ID:       00914F4A-9620-423D-8D79-8D209F516669
-   :END:
 
 回到文章开头的问题中：我们希望以general的方式编写 ~power~ 函数的代码，同时在运行时具有类似特化代码的运行效率。我们可以用 MSP 重新编写 ~power~ 函数，使它在运行时根据参数 ~n~ 生成类似 ~x * x~ 形式的的代码。新的 ~power~ 函数如下所示：
 
@@ -94,19 +80,10 @@ let power2 = .! .<fun x -> .~(power (2,.<x>.))>.;;
 在 ~power2~ 函数中我们得到的实际上是 ~.! .<1 * x * x>.~, 所以其最终运行效果和 ~1 * x * x~ 是一样的。
 
 ** 其他应用
-   :PROPERTIES:
-   :ID:       23C53132-F8D9-4A2D-92B5-84B97A40FB35
-   :END:
 *** Staged Interpreter
-    :PROPERTIES:
-    :ID:       6879D2FB-83C1-4341-92F2-E1F2BE841CFF
-    :END:
 通过将要解释的代码解释成原生代码并编译取得和原生代码一样的效率（类似JIT？）。
 
 *** 其他
-    :PROPERTIES:
-    :ID:       062CEB62-5004-412C-B985-DE4FF841A25E
-    :END:
 （待补充）
 
 [fn:1] 本文中的所有代码都来自[[http://www.cs.rice.edu/~taha/publications/journal/dspg04a.pdf][ A Gentle Introduction to Multi-stage Programming]] 原文。

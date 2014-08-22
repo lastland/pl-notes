@@ -1,7 +1,10 @@
+#+OPTIONS: toc:nil
 #+title: Java HotSpot Virtual Machine 的垃圾回收机制
 #+date: <2014-08-21>
 
 本文是[[http://www.oracle.com/technetwork/java/javase/memorymanagement-whitepaper-150215.pdf][Memory Management in the Java HotSpotTM Virtual Machine]] (2006) 一文的阅读笔记。
+
+#+TOC: headlines 3
 
 * 背景知识
 ** 显式内存管理的问题

@@ -1,7 +1,10 @@
+#+OPTIONS: toc:nil
 #+title: Multi-stage Programming
 #+date: <2014-08-05>
 
 本文是[[http://www.cs.rice.edu/~taha/publications/journal/dspg04a.pdf][A Gentle Introduction to Multi-stage Programming]] (2004) 一文的阅读笔记。
+
+#+TOC: headlines 3
 
 * 导言
 

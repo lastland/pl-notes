@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Java HotSpot Virtual Machine 的垃圾回收机制</title>
-<!-- 2014-08-22 Fri 12:38 -->
+<!-- 2014-08-22 Fri 16:51 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="梦里醉逍遥" />
@@ -88,9 +88,6 @@
     { background-color: #ffff00; color: #000000; font-weight: bold; }
   /*]]>*/-->
 </style>
-<link rel="alternate" type="application/rss+xml"
-                href="http://lastland.github.io/pl-notes/index.xml"
-                title="RSS feed for mydomain.org">
 <script type="text/javascript">
 /*
 @licstart  The following is the entire license notice for the
@@ -141,6 +138,10 @@ for the JavaScript code in this tag.
 <body>
 <div id="content">
 <h1 class="title">Java HotSpot Virtual Machine 的垃圾回收机制</h1>
+<p>
+本文是<a href="http://www.oracle.com/technetwork/java/javase/memorymanagement-whitepaper-150215.pdf">Memory Management in the Java HotSpotTM Virtual Machine</a> (2006) 一文的阅读笔记。
+</p>
+
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
@@ -173,9 +174,6 @@ for the JavaScript code in this tag.
 </ul>
 </div>
 </div>
-<p>
-本文是<a href="http://www.oracle.com/technetwork/java/javase/memorymanagement-whitepaper-150215.pdf">Memory Management in the Java HotSpotTM Virtual Machine</a> (2006) 一文的阅读笔记。
-</p>
 
 <div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1">背景知识</h2>
@@ -511,7 +509,7 @@ Java HotSpot VM 还自动选择回收器类型、堆大小的方法，用户只�
 <div id="postamble" class="status">
 <p class="date">Date: 2014-08-21</p>
 <p class="author">Author: 梦里醉逍遥</p>
-<p class="date">Created: 2014-08-22 Fri 12:38</p>
+<p class="date">Created: 2014-08-22 Fri 16:51</p>
 <p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.3.1 (<a href="http://orgmode.org">Org</a> mode 8.2.7b)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>

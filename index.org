@@ -1,7 +1,4 @@
 #+TITLE: 程序语言笔记
 
-   + [[file:_site/index.org][程序语言笔记]]
-   + [[file:_site/2014-08-21-hotspot-gc.org][Java HotSpot Virtual Machine 的垃圾回收机制]]
-   + [[file:_site/2014-08-05-msp.org][Multi-stage Programming]]
    + [[file:2014-08-21-hotspot-gc.org][Java HotSpot Virtual Machine 的垃圾回收机制]]
    + [[file:2014-08-05-msp.org][Multi-stage Programming]]

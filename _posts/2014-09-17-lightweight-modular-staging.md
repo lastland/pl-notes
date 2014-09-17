@@ -18,15 +18,19 @@ tags: [Scala, Multi-stage Programming]
 
 在 MetaOCaml 或者其他的支持 multi-stage programming 的语言当中，我们可以通过 *brackets* 和 *escape* 两种操作来编写一个可以生成特化函数的函数。譬如在 OCaml 中，一个 `power` 函数可以这样实现：
 
+{% highlight ocaml %}
     let rec power (n, x) =
         match n with
          0 -> 1 | n -> x * (power (n-1, x));;
+{% endhighlight %}
 
 使用 MetaOCaml 可以这样编写一个形式上类似的函数：
 
+{% highlight ocaml %}
     let rec power (n, x) =
        match n with
          0 -> .<1>. | n -> .<.~x * .~(power (n-1, x))>.;;
+{% endhighlight %}
 
 对这两个函数的详细解释可以参看[我之前的笔记](../../../08/05/1)。
 
@@ -34,14 +38,18 @@ tags: [Scala, Multi-stage Programming]
 
 还是以 `power` 函数为例，在 Scala 中我们可以这样实现：
 
+{% highlight scala %}
     def power(b: Double, x: Int): Double =
         if (x == 0) 1.0 else b * power(b, x - 1)
+{% endhighlight %}
 
 而当想要编写 multi-stage 版本时，利用 LMS，我们只需要把上述代码改成下面这幅样子：
 
+{% highlight scala %}
     trait PowerA { this: Arith =>
         def power(b: Rep[Double], x: Int): Rep[Double] =
             if (x == 0) 1.0 else b * power(b, x - 1) }
+{% endhighlight %}
 
 请注意新版本的 `power` 函数的函数体内部的变化是……没有任何变化！LMS 版本涉及到的改变总共只有两个：一，函数的参数 `b` 和返回值的类型从 `Double` 变成了 `Rep[Double]`；二，函数外面被包了一个 trait，且这个 trait 要求所有使用该 trait 的类都必须同时使用 `Arith` 这个 trait 或者它的 `subtrait`。
 
@@ -59,14 +67,17 @@ tags: [Scala, Multi-stage Programming]
 
 前面我们已经看到了用 LMS 实现的 multi-stage 版本的 `power` 函数，为了方便查看，这里我们再把它列在这里：
 
+{% highlight scala %}
     trait PowerA { this: Arith =>
         def power(b: Rep[Double], x: Int): Rep[Double] =
             if (x == 0) 1.0 else b * power(b, x - 1) }
+{% endhighlight %}
 
 ## 坏的实现：字符串
 
 形式已经有了，那么接下来怎么实现呢？一种最直观也是最 naive 的实现如下：
 
+{% highlight scala %}
     trait BaseStr extends Base {
         type Rep[+T] = String
     }
@@ -77,6 +88,7 @@ tags: [Scala, Multi-stage Programming]
         def infix_*(x: String, y: String) = "(%s*%s)".format(x,y)
         ...
     }
+{% endhighlight %}
 
 我们先无视 `Base` 这个东西。在 `BaseStr` 中我们设定了一个 type alias，也就是所有的 `Rep[T]` 其实都是 `String` [^3]。
 
@@ -86,15 +98,19 @@ tags: [Scala, Multi-stage Programming]
 
 好了，这样寥寥几行代码我们就有了一段可以生成代码的代码。尽管我们还没有实现编译这块的工作，但不妨先看看这样的实现生成的代码质量如何。我们通过下面的方式调用我们的 `PowerA`：
 
+{% highlight scala %}
     new PowerA with ArithStr {
         println {
             power("(x0+x1)",4)
         }
     }
+{% endhighlight %}
 
 运行的结果如下：
 
+{% highlight scala %}
     ((x0+x1)*((x0+x1)*((x0+x1)*((x0+x1)*1.0))))
+{% endhighlight %}
 
 很遗憾，这是一个看上去很蠢的结果，即使不论最后多余的 `*1.0`，大量重复的 `x0+x1` 实在难以称得上好的代码。这是因为我们选择了使用字符串来实现这些东西，简单粗暴的同时我们失去了对代码进行优化的可能。
 
@@ -104,6 +120,7 @@ tags: [Scala, Multi-stage Programming]
 
 由于上述原因，实际的 LMS 在实现时采用了图作为代码的中间表示手段。下面是用图来实现这一方法的代码示例：
 
+{% highlight scala %}
     trait Expressions {
         // expressions (atomic)
         abstract class Exp[+T]
@@ -130,10 +147,12 @@ tags: [Scala, Multi-stage Programming]
                 findDefinition(s)
         }
     }
+{% endhighlight %}
 
 这里我们定义了一些基本的 Node 和一些基本操作。主义的是这里的一个叫做 `Def[T]` 的类，每一个该类型都对应了一个 `Sym[T]` 的类型，而后者是 `Exp[T]`，后面我们也将看到它也就是 `Rep[T]` 的真身。 `Sym[T]` 表示的是一个类型为 `T` 的符号；`toAtom` 则定义了一个 `Def[T]` 到符号的隐式转换，转换的规则是寻找当前是否存在和该 `Def[T]` 相关的符号，如果不存在，那么为它创建一个。这些和公共子表达式的消除这一功能密切相关。
 下面我们继续看 `Arith` 的相关实现：
 
+{% highlight scala %}
     trait BaseExp extends Base with Expressions {
         type Rep[+T] = Exp[T]
     }
@@ -147,6 +166,7 @@ tags: [Scala, Multi-stage Programming]
         def infix_+(x: Exp[Double], y: Exp[Double]) = Plus(x, y)
         def infix_*(x: Exp[Double], y: Exp[Double]) = Times(x, y)
     }
+{% endhighlight %}
 
 `BaseExp` 和 `ArithExp` 首先声明了 `Rep[T]` 就是 `Exp[T]`，并定义了从 `Double` 到 `Exp[Double]` 的隐式转换规则。
 
@@ -154,6 +174,7 @@ tags: [Scala, Multi-stage Programming]
 
 我们前面提过，LMS 的一个好处是，用户可以自由组合一些 trait 来对生成的代码进行优化，我们前面已经看到用字符串写的代码中有一个冗余的 `*1.0`，虽然无伤大雅，但我们不妨通过展示如何来消除这个强迫症的死敌来展示 LMS 的这一特性。我们可以编写如下函数：
 
+{% highlight scala %}
     trait ArithExpOpt extends ArithExp {
         override def infix_*(x:Exp[Int],y:Exp[Int]) = (x,y) match {
             case (Const(x), Const(y)) => Const(x * y)
@@ -162,11 +183,13 @@ tags: [Scala, Multi-stage Programming]
             case _ => super.infix_*(x, y)
         }
     }
+{% endhighlight %}
 
 我们新的 trait `ArithExpOpt` 重载了乘法，对某些特定的 Node 进行了重写——因为我们使用图作为代码的中间表示形式，才使方便地进行重写优化成为可能。这里定义的重写规则很简单，当我们看到两个常数相乘时，就直接在生成代码时就把它们乘起来；如果两个因数中存在1，那么就省略掉1 [^4]。
 
 下面我们来尝试下新的实现：
 
+{% highlight scala %}
     trait PowerA2 extends PowerA { this: Compile =>
         val p4 = compile { x: Rep[Double] =>
             power(x + x, 4)
@@ -176,9 +199,11 @@ tags: [Scala, Multi-stage Programming]
 
     new PowerA2 with CompileScala
         with ArithExpOpt with ScalaGenArith
+{% endhighlight %}
 
 生成的代码如下：
 
+{% highlight scala %}
     class Anon$1 extends ((Double)=>(Double)) {
         def apply(x0:Double): Double = {
             val x1 = x0+x0
@@ -188,6 +213,7 @@ tags: [Scala, Multi-stage Programming]
             x4
         }
     }
+{% endhighlight %}
 
 我们确实成功消除了公共子表达式和冗余的常数1.
 
